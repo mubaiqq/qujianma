@@ -34,6 +34,7 @@ import { MysqlAdminRepository } from './modules/admin/repository.js';
 
 const config = loadConfig(process.env);
 process.env.TZ = config.TZ;
+const cookieSecure = new URL(config.APP_BASE_URL).protocol === 'https:';
 const appKey = config.APP_KEY_HEX;
 if (!appKey) throw new Error('完整 Node API 需要配置 APP_KEY_HEX');
 const database = createDatabase(config);
@@ -42,7 +43,7 @@ const pool = database.write;
 const repositoryPool = pool as never;
 const sessionRepository = new MysqlSessionRepository(repositoryPool);
 const accountRepository = new MysqlAccountRepository(repositoryPool);
-const auth = createAuthContext({ repository: sessionRepository, cookieName: config.COOKIE_NAME });
+const auth = createAuthContext({ repository: sessionRepository, cookieName: config.COOKIE_NAME, cookieSecure });
 const aiClient = new OpenAiCompatibleClient(undefined, config.AI_ALLOW_PRIVATE_URLS);
 const recognitionRepository = new MysqlRecognitionRepository(repositoryPool);
 const recognitionService = new RecognitionService(recognitionRepository, {

@@ -10,9 +10,10 @@ type AccountMethods = Pick<AccountService, 'login' | 'register'>;
 function buildAccountApp(
   service: AccountMethods,
   resolveSession: AccountSessionResolver = vi.fn().mockResolvedValue(false),
+  cookieSecure = true,
 ) {
   const app = Fastify({ logger: false });
-  registerAccountRoutes(app, { service, resolveSession });
+  registerAccountRoutes(app, { service, resolveSession, cookieSecure });
   return app;
 }
 
@@ -25,6 +26,14 @@ function service(overrides: Partial<AccountMethods> = {}): AccountMethods {
 }
 
 describe('POST /api/account contract', () => {
+  it('allows a persistent login cookie on an explicitly configured HTTP deployment', async () => {
+    const app = buildAccountApp(service(), vi.fn().mockResolvedValue(false), false);
+    const response = await app.inject({ method: 'POST', url: '/api/account', payload: { action: 'login', username: 'alice', password: 'password' } });
+    expect(response.headers['set-cookie']).toContain('pickup_login=login-token');
+    expect(response.headers['set-cookie']).not.toContain('Secure');
+    await app.close();
+  });
+
   it('rejects non-POST methods with the exact legacy response', async () => {
     const account = service();
     const app = buildAccountApp(account);

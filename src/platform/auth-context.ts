@@ -5,7 +5,7 @@ import { csrfForCookie } from './legacy-crypto.js';
 import { authenticateSession, type SessionRepository, type SessionUser } from '../modules/session/domain.js';
 
 const YEAR_IN_SECONDS = 365 * 24 * 60 * 60;
-const cookieOptions = { path: '/', secure: true, httpOnly: true, sameSite: 'lax' as const };
+const cookieOptions = (secure: boolean) => ({ path: '/', secure, httpOnly: true, sameSite: 'lax' as const });
 
 export interface AuthenticatedContext { user: SessionUser; token: string }
 export interface AuthContext {
@@ -16,16 +16,17 @@ export interface AuthContext {
   clear(reply: FastifyReply): void;
 }
 
-export function createAuthContext(options: { repository: SessionRepository; cookieName?: string; now?: () => Date }): AuthContext {
+export function createAuthContext(options: { repository: SessionRepository; cookieName?: string; now?: () => Date; cookieSecure?: boolean }): AuthContext {
   const cookieName = options.cookieName ?? 'pickup_login';
+  const cookie = cookieOptions(options.cookieSecure ?? true);
   const now = options.now ?? (() => new Date());
   const authenticate = async (request: FastifyRequest, reply: FastifyReply): Promise<AuthenticatedContext | null> => {
     const result = await authenticateSession(request.cookies[cookieName], options.repository, now());
     if (result.authenticated === false) {
-      if (result.clearCookie) reply.clearCookie(cookieName, cookieOptions);
+      if (result.clearCookie) reply.clearCookie(cookieName, cookie);
       return null;
     }
-    reply.setCookie(cookieName, result.token, { ...cookieOptions, maxAge: YEAR_IN_SECONDS });
+    reply.setCookie(cookieName, result.token, { ...cookie, maxAge: YEAR_IN_SECONDS });
     return { user: result.user, token: result.token };
   };
   return {
@@ -44,6 +45,6 @@ export function createAuthContext(options: { repository: SessionRepository; cook
       return valid;
     },
     csrf: csrfForCookie,
-    clear(reply) { reply.clearCookie(cookieName, cookieOptions); },
+    clear(reply) { reply.clearCookie(cookieName, cookie); },
   };
 }

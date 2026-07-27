@@ -18,9 +18,9 @@ function repository(overrides: Partial<SessionRepository> = {}): SessionReposito
   };
 }
 
-function buildSessionApp(repo: SessionRepository) {
+function buildSessionApp(repo: SessionRepository, cookieSecure = true) {
   const app = Fastify({ logger: false });
-  registerSessionRoutes(app, { repository: repo, now: () => now });
+  registerSessionRoutes(app, { repository: repo, now: () => now, cookieSecure });
   return app;
 }
 
@@ -65,6 +65,13 @@ describe('session domain', () => {
 });
 
 describe('GET /api/session contract', () => {
+  it('renews the cookie without Secure on an explicitly configured HTTP deployment', async () => {
+    const app = buildSessionApp(repository(), false);
+    const response = await app.inject({ method: 'GET', url: '/api/session', headers: { cookie: `pickup_login=${syntheticCookie}` } });
+    expect(response.headers['set-cookie']).not.toContain('Secure');
+    await app.close();
+  });
+
   it('returns the exact legacy user and CSRF contract only after renewal', async () => {
     const repo = repository();
     const app = buildSessionApp(repo);

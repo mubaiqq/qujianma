@@ -4,10 +4,10 @@ import type { AuthContext } from '../../platform/auth-context.js';
 import type { AccountResult, AccountService } from './service.js';
 
 const YEAR_IN_SECONDS = 365 * 24 * 60 * 60;
-const secureCookie = { path: '/', secure: true, httpOnly: true, sameSite: 'lax' as const };
+const cookieOptions = (secure: boolean) => ({ path: '/', secure, httpOnly: true, sameSite: 'lax' as const });
 type AccountMethods = Pick<AccountService, 'login' | 'register'> & Partial<Pick<AccountService, 'logout' | 'changePassword'>>;
 export type AccountSessionResolver = (request: FastifyRequest) => Promise<boolean>;
-export interface AccountRouteOptions { service: AccountMethods; auth?: AuthContext; resolveSession?: AccountSessionResolver; cookieName?: string }
+export interface AccountRouteOptions { service: AccountMethods; auth?: AuthContext; resolveSession?: AccountSessionResolver; cookieName?: string; cookieSecure?: boolean }
 type RequestBody = Record<string, unknown>;
 
 const failure = (message: string) => ({ code: 1 as const, message });
@@ -21,14 +21,16 @@ function legacyBody(body: unknown): RequestBody | null {
   return typeof body === 'object' && !Array.isArray(body) ? body as RequestBody : {};
 }
 const optionalString = (body: RequestBody, key: string): string | undefined => typeof body[key] === 'string' ? body[key] : undefined;
-function sendResult(reply: FastifyReply, result: AccountResult & { clearLogin?: boolean }, cookieName: string) {
-  if (result.loginToken !== undefined && result.status === 200 && result.body.code === 0) reply.setCookie(cookieName, result.loginToken, { ...secureCookie, maxAge: YEAR_IN_SECONDS });
-  if (result.clearLogin) reply.clearCookie(cookieName, secureCookie);
+function sendResult(reply: FastifyReply, result: AccountResult & { clearLogin?: boolean }, cookieName: string, secure: boolean) {
+  const options = cookieOptions(secure);
+  if (result.loginToken !== undefined && result.status === 200 && result.body.code === 0) reply.setCookie(cookieName, result.loginToken, { ...options, maxAge: YEAR_IN_SECONDS });
+  if (result.clearLogin) reply.clearCookie(cookieName, options);
   return reply.status(result.status).send(result.body);
 }
 
 function install(app: FastifyInstance, options: AccountRouteOptions): void {
   const cookieName = options.cookieName ?? 'pickup_login';
+  const cookieSecure = options.cookieSecure ?? true;
   app.removeAllContentTypeParsers();
   app.addContentTypeParser('*', { parseAs: 'string' }, (_request, body, done) => { done(null, body); });
   app.all('/api/account', { errorHandler: (_error, _request, reply) => { void reply.header('Cache-Control', 'no-store').status(400).send(failure('JSON格式错误')); } }, async (request, reply) => {
@@ -52,13 +54,13 @@ function install(app: FastifyInstance, options: AccountRouteOptions): void {
             ...(password === undefined ? {} : { password }),
             ...(confirmPassword === undefined ? {} : { confirmPassword }),
           }, { isLoggedIn });
-        return sendResult(reply, result, cookieName);
+        return sendResult(reply, result, cookieName, cookieSecure);
       }
       if (!options.auth) return reply.status(400).send(failure('未知操作'));
       const context = await options.auth.require(request, reply);
       if (context === null) return reply;
       if (!options.auth.requireCsrf(request, reply, context)) return reply;
-      if (action === 'logout' && options.service.logout) return sendResult(reply, await options.service.logout(context.user.id, context.token), cookieName);
+      if (action === 'logout' && options.service.logout) return sendResult(reply, await options.service.logout(context.user.id, context.token), cookieName, cookieSecure);
       if (action === 'change_password' && options.service.changePassword) {
         const oldPassword = optionalString(body, 'old_password');
         const newPassword = optionalString(body, 'new_password');
@@ -67,7 +69,7 @@ function install(app: FastifyInstance, options: AccountRouteOptions): void {
           ...(oldPassword === undefined ? {} : { oldPassword }),
           ...(newPassword === undefined ? {} : { newPassword }),
           ...(confirmPassword === undefined ? {} : { confirmPassword }),
-        }, { userId: context.user.id }), cookieName);
+        }, { userId: context.user.id }), cookieName, cookieSecure);
       }
       return reply.status(400).send(failure('未知操作'));
     } catch {

@@ -87,8 +87,9 @@ export function buildApp({ config, databaseReadiness, core, modules }: BuildAppO
   registerVersionRoutes(app);
   app.after(() => {
     if (core) {
-      registerSessionRoutes(app, { repository: core.sessionRepository, cookieName: config.COOKIE_NAME, cookieRegistered: true });
-      registerAccountRoutes(app, { service: core.accountService, auth: core.auth, cookieName: config.COOKIE_NAME });
+      const cookieSecure = new URL(config.APP_BASE_URL).protocol === 'https:';
+      registerSessionRoutes(app, { repository: core.sessionRepository, cookieName: config.COOKIE_NAME, cookieRegistered: true, cookieSecure });
+      registerAccountRoutes(app, { service: core.accountService, auth: core.auth, cookieName: config.COOKIE_NAME, cookieSecure });
       registerParcelsRoutes(app, { repository: core.parcelsRepository, auth: core.auth });
       registerStationsRoutes(app, { service: core.stationsService, auth: core.auth });
     }
