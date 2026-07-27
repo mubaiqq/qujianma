@@ -7,6 +7,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import * as webpush from 'web-push';
 
 const dataRoot = process.env.INSTALL_DATA_ROOT ?? '/app/data';
 const envPath = resolve(dataRoot, 'app.env');
@@ -18,6 +19,17 @@ function envLine(key: string, value: string): string {
   return `${key}=${value.replaceAll('\\', '\\\\').replaceAll('\n', '')}`;
 }
 function jsonError(message: string, status = 400) { return { status, body: { code: 1, message } }; }
+const generateVapidKeys = () => webpush.generateVAPIDKeys();
+
+function installBaseUrl(request: { headers: Record<string, unknown>; hostname: string }, supplied: string): string {
+  const forwarded = String(request.headers['x-forwarded-proto'] ?? '').split(',')[0]?.trim().toLowerCase();
+  const protocol = forwarded === 'https' ? 'https:' : 'http:';
+  const value = supplied || `${protocol}//${request.hostname}`;
+  let parsed: URL;
+  try { parsed = new URL(value); } catch { throw new Error('访问地址格式无效'); }
+  if (!['http:', 'https:'].includes(parsed.protocol) || parsed.username || parsed.password) throw new Error('访问地址仅支持 HTTP 或 HTTPS');
+  return parsed.toString().replace(/\/$/, '');
+}
 
 export async function runInstaller(): Promise<void> {
   const app = Fastify({ logger: true });
@@ -51,7 +63,9 @@ export async function runInstaller(): Promise<void> {
     const username = text('username');
     const password = typeof body.password === 'string' ? body.password : '';
     const confirm = typeof body.confirm_password === 'string' ? body.confirm_password : '';
-    const baseUrl = text('app_base_url') || `http://localhost:${process.env.PORT ?? '38765'}`;
+    let baseUrl: string;
+    try { baseUrl = installBaseUrl(request, text('app_base_url')); }
+    catch (error) { return reply.status(422).send(jsonError(error instanceof Error ? error.message : '访问地址无效').body); }
     if (!dbUser || !dbName || !username || password.length < 8) return reply.status(422).send(jsonError('请完整填写数据库和管理员信息，并设置至少8位管理员密码').body);
     if (password !== confirm) return reply.status(422).send(jsonError('两次管理员密码不一致').body);
     if (!Number.isInteger(dbPort) || dbPort < 1 || dbPort > 65535) return reply.status(422).send(jsonError('数据库端口无效').body);
@@ -63,12 +77,14 @@ export async function runInstaller(): Promise<void> {
       const hash = await bcrypt.hash(password, 12);
       await connection.execute('INSERT INTO users (username,password_hash) VALUES (?,?) ON DUPLICATE KEY UPDATE password_hash=VALUES(password_hash)', [username, hash.replace('$2b$', '$2y$')]);
       const key = randomBytes(32).toString('hex');
+      const vapid = generateVapidKeys();
       await mkdir(dataRoot, { recursive: true });
       const content = [
         'NODE_ENV=production', 'HOST=0.0.0.0', `PORT=${process.env.PORT ?? '38765'}`, 'LOG_LEVEL=info', 'TZ=Asia/Shanghai',
         'APP_VERSION=1.0.0', envLine('APP_BASE_URL', baseUrl), envLine('DB_HOST', dbHost), `DB_PORT=${dbPort}`, envLine('DB_NAME', dbName),
         envLine('DB_USER', dbUser), envLine('DB_PASSWORD', dbPassword), envLine('DB_WRITE_USER', dbUser), envLine('DB_WRITE_PASSWORD', dbPassword),
-        'COOKIE_NAME=pickup_login', `APP_KEY_HEX=${key}`, 'WORKER_ENABLED=true', 'WORKER_HEARTBEAT_SECONDS=15',
+        'COOKIE_NAME=pickup_login', `APP_KEY_HEX=${key}`, envLine('VAPID_SUBJECT', `mailto:admin@${new URL(baseUrl).hostname}`),
+        envLine('VAPID_PUBLIC_KEY', vapid.publicKey), envLine('VAPID_PRIVATE_KEY', vapid.privateKey), 'WORKER_ENABLED=true', 'WORKER_HEARTBEAT_SECONDS=15',
         'RECOGNITION_WORKER_ENABLED=true', envLine('RECOGNITION_UPLOAD_ROOT', process.env.RECOGNITION_UPLOAD_ROOT ?? resolve(dataRoot, 'recognition-uploads')), '',
       ].join('\n');
       await writeFile(envPath, content, { mode: 0o600 });

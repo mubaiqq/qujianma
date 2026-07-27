@@ -27,4 +27,13 @@ describe('first-run installer contract', () => {
     expect(html).toMatch(/btn\.textContent='✓ 安装成功'/);
     expect(html).toMatch(/setTimeout\(\(\)=>location\.href='\/login',1200\)/);
   });
+
+  it('supports HTTP and HTTPS installs and generates Web Push credentials on first install', () => {
+    const installer = read('src/installer.ts');
+    expect(installer).toContain("['http:', 'https:']");
+    expect(installer).toContain("request.headers['x-forwarded-proto']");
+    expect(installer).toContain('generateVapidKeys()');
+    expect(installer).toContain("envLine('VAPID_PUBLIC_KEY'");
+    expect(installer).toContain("envLine('VAPID_PRIVATE_KEY'");
+  });
 });
