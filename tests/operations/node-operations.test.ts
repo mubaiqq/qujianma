@@ -15,6 +15,13 @@ describe('Node 运维契约', () => {
     expect(text).toContain('RELEASE_LOCK');
   });
 
+  it('迁移文件名使用脚本可识别的14位时间戳', async () => {
+    const text = await read('scripts/node-migrate.mjs');
+    expect(text).toContain('^\\d{14}_');
+    expect(await read('migrations/20260725000000_durable_recognition_jobs.sql')).toContain('CREATE TABLE IF NOT EXISTS recognition_jobs');
+    expect(await read('migrations/20260726000000_notification_worker_runtime.sql')).toContain('CREATE TABLE IF NOT EXISTS worker_status');
+  });
+
   it('更新严格包含备份、构建、迁移、测试、切换、重启和探针', async () => {
     const text = await read('scripts/node-update.sh');
     const ordered = ['node-backup.sh', 'run_npm_ci', 'npm run build', 'node scripts/node-migrate.mjs dry-run', 'node scripts/node-migrate.mjs up', 'npm test', 'ln -sfn "$release"', 'systemctl restart', 'probe'];

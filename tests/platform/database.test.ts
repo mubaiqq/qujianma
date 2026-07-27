@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { assertReadOnlyGrants } from '../../src/platform/database.js';
+import { assertReadOnlyGrants, tableNameFromRow } from '../../src/platform/database.js';
 
 describe('read-only MySQL grant validation', () => {
+  it('reads information_schema table names from MySQL 5.7 lowercase keys', () => {
+    expect(tableNameFromRow({ table_name: 'users' })).toBe('users');
+    expect(tableNameFromRow({ TABLE_NAME: 'users' })).toBe('users');
+  });
+
   it('accepts a full-access account when the same account is used for writes', () => {
     expect(() => assertReadOnlyGrants([
       "GRANT USAGE ON *.* TO 'qjm'@'127.0.0.1'",

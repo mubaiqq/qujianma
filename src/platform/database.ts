@@ -19,10 +19,15 @@ interface SessionRow extends RowDataPacket {
 }
 
 interface TableRow extends RowDataPacket {
-  TABLE_NAME: string;
+  TABLE_NAME?: string;
+  table_name?: string;
 }
 
 type GrantRow = RowDataPacket;
+
+export function tableNameFromRow(row: Pick<TableRow, 'TABLE_NAME' | 'table_name'>): string {
+  return row.TABLE_NAME ?? row.table_name ?? '';
+}
 
 export interface DatabaseReadiness {
   connected: true;
@@ -91,7 +96,7 @@ export function createDatabase(config: AppConfig): DatabasePools {
         const [grantRows] = await connection.query<GrantRow[]>('SHOW GRANTS');
         const session = sessionRows[0];
         if (!session) throw new Error('数据库未返回会话状态');
-        const tables = tableRows.map((row) => row.TABLE_NAME);
+        const tables = tableRows.map(tableNameFromRow).filter(Boolean);
         const grants: unknown[] = grantRows.flatMap((row) => Object.values(row as unknown as Record<string, unknown>));
         assertReadOnlyGrants(grants, config.DB_NAME, write === read || config.DB_USER === config.DB_WRITE_USER);
         return {
