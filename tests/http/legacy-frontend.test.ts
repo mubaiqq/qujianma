@@ -7,7 +7,7 @@ import type { AppConfig } from '../../src/platform/config.js';
 
 const root = resolve(import.meta.dirname, '../..');
 const expectedHashes: Record<string, string> = {
-  'public/assets/css/app.css': '2a11bfd6f53647869b2f9a8d47aba616f15ee45256644a641a2abbd8d2b52595',
+  'public/assets/css/app.css': '4a7d00d4828a553346dd35bcd6d367fc4f72b156296e915662826535e9a0698c',
   'public/assets/js/app.js': '77cfd060a42d95cbc76ef3438cdd6e2272a4a960d0da651cc65b40c86b8d7659',
   'public/assets/js/login.js': '190a69d3f98b8ccb8db2f4b848b24dac2583d35a5398e63054fd1b45cdc55d00',
   'public/manifest.webmanifest': '1cb199ce12b4536a4221d692aadc939c9fa0bd36bab217116f5b598d8791ea7a',
