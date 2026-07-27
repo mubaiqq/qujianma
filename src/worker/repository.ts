@@ -42,21 +42,21 @@ export class MysqlNotificationWorkerRepository implements NotificationWorkerRepo
   }
 
   async eligibleDaily(now: Date) {
-    const [rows] = await this.pool.execute("SELECT np.user_id,(SELECT COUNT(*) FROM parcels p WHERE p.user_id=np.user_id AND p.status='pending') pending_count FROM notification_preferences np WHERE np.daily_enabled=1 AND np.daily_time<=TIME(CONVERT_TZ(?, '+00:00', np.timezone)) AND (np.last_daily_sent_date IS NULL OR np.last_daily_sent_date<DATE(CONVERT_TZ(?, '+00:00', np.timezone))) AND EXISTS(SELECT 1 FROM push_subscriptions ps WHERE ps.user_id=np.user_id) HAVING pending_count>0", [now, now]);
+    const [rows] = await this.pool.execute("SELECT np.user_id,(SELECT COUNT(*) FROM parcels p WHERE p.user_id=np.user_id AND p.status='pending') pending_count FROM notification_preferences np WHERE np.daily_enabled=1 AND np.daily_time<=TIME(CONVERT_TZ(?, '+00:00', '+08:00')) AND (np.last_daily_sent_date IS NULL OR np.last_daily_sent_date<DATE(CONVERT_TZ(?, '+00:00', '+08:00'))) AND EXISTS(SELECT 1 FROM push_subscriptions ps WHERE ps.user_id=np.user_id) HAVING pending_count>0", [now, now]);
     return (rows as RowDataPacket[]).map((row) => ({ userId: Number(row.user_id), pendingCount: Number(row.pending_count) } satisfies WorkerCandidate));
   }
 
   async eligibleOverdue(now: Date) {
-    const [rows] = await this.pool.execute("SELECT np.user_id,MAX(TIMESTAMPDIFF(HOUR,p.received_at,?)) max_hours FROM notification_preferences np JOIN parcels p ON p.user_id=np.user_id AND p.status='pending' WHERE np.new_pending_enabled=1 AND (np.last_overdue_sent_date IS NULL OR np.last_overdue_sent_date<DATE(CONVERT_TZ(?, '+00:00', np.timezone))) AND EXISTS(SELECT 1 FROM push_subscriptions ps WHERE ps.user_id=np.user_id) GROUP BY np.user_id HAVING max_hours>=24", [now, now]);
+    const [rows] = await this.pool.execute("SELECT np.user_id,MAX(TIMESTAMPDIFF(HOUR,p.received_at,?)) max_hours FROM notification_preferences np JOIN parcels p ON p.user_id=np.user_id AND p.status='pending' WHERE np.new_pending_enabled=1 AND (np.last_overdue_sent_date IS NULL OR np.last_overdue_sent_date<DATE(CONVERT_TZ(?, '+00:00', '+08:00'))) AND EXISTS(SELECT 1 FROM push_subscriptions ps WHERE ps.user_id=np.user_id) GROUP BY np.user_id HAVING max_hours>=24", [now, now]);
     return (rows as RowDataPacket[]).map((row) => ({ userId: Number(row.user_id), maxHours: Number(row.max_hours) } satisfies OverdueCandidate));
   }
 
   async markDailySent(userId: number, now: Date) {
-    await this.pool.execute("UPDATE notification_preferences SET last_daily_sent_date=DATE(CONVERT_TZ(?,'+00:00',timezone)) WHERE user_id=?", [now, userId]);
+    await this.pool.execute("UPDATE notification_preferences SET last_daily_sent_date=DATE(CONVERT_TZ(?,'+00:00','+08:00')) WHERE user_id=?", [now, userId]);
   }
 
   async markOverdueSent(userId: number, now: Date) {
-    await this.pool.execute("UPDATE notification_preferences SET last_overdue_sent_date=DATE(CONVERT_TZ(?,'+00:00',timezone)) WHERE user_id=?", [now, userId]);
+    await this.pool.execute("UPDATE notification_preferences SET last_overdue_sent_date=DATE(CONVERT_TZ(?,'+00:00','+08:00')) WHERE user_id=?", [now, userId]);
   }
 
   async heartbeat(state: { status: 'running' | 'succeeded' | 'failed'; at: Date; attempt: number; error?: string }) {
