@@ -130,7 +130,7 @@ describe('legacy frontend compatibility', () => {
     expect(response.statusCode).toBe(200);
     expect(response.headers['content-type']).toContain('text/html');
     expect(response.body).toContain('Android 正式版 1.0.0');
-    expect(response.body).toContain('https://mby.lanzoue.com/i0cMJ3ykafle');
+    expect(response.body).toContain('https://mby.lanzoue.com/iwv1E3z21mmb');
     await app.close();
   });
 
