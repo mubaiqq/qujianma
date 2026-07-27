@@ -2,6 +2,15 @@ import { describe, expect, it, vi } from 'vitest';
 import { MysqlRecognitionWorkerRepository } from '../../src/worker/recognition-repository.js';
 
 describe('recognition worker retry SQL', () => {
+  it('claims jobs without MySQL 8-only SKIP LOCKED syntax', async () => {
+    const connection = { execute: vi.fn().mockResolvedValue([[], []]), beginTransaction: vi.fn(), commit: vi.fn(), rollback: vi.fn(), release: vi.fn() };
+    const pool = { execute: vi.fn(), getConnection: vi.fn().mockResolvedValue(connection) };
+    await new MysqlRecognitionWorkerRepository(pool).claim('worker-1', 30);
+    const claimSql = String(connection.execute.mock.calls[0]?.[0]);
+    expect(claimSql).toContain('FOR UPDATE');
+    expect(claimSql).not.toContain('SKIP LOCKED');
+  });
+
   it('uses a short fixed 12-second retry delay and exposes the timeout waiting state', async () => {
     const connection = { execute: vi.fn().mockResolvedValue([{ affectedRows: 1 }, []]), beginTransaction: vi.fn(), commit: vi.fn(), rollback: vi.fn(), release: vi.fn() };
     const pool = { execute: vi.fn(), getConnection: vi.fn().mockResolvedValue(connection) };

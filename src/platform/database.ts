@@ -9,7 +9,7 @@ export const requiredLegacyTables = [
 const mysqlQuotedIdentifier = '`(?:``|[^`])+`';
 const mysqlAccount = `(?:${mysqlQuotedIdentifier}|'(?:''|[^'])+')@(?:${mysqlQuotedIdentifier}|'(?:''|[^'])+')`;
 const allowedGrantPattern = new RegExp(
-  `^GRANT\\s+(USAGE|SELECT)\\s+ON\\s+(\\*\\.\\*|(${mysqlQuotedIdentifier})\\.\\*)\\s+TO\\s+${mysqlAccount}$`,
+  `^GRANT\\s+(USAGE|SELECT|ALL PRIVILEGES)\\s+ON\\s+(\\*\\.\\*|(${mysqlQuotedIdentifier})\\.\\*)\\s+TO\\s+${mysqlAccount}$`,
   'i',
 );
 
@@ -37,7 +37,7 @@ function unquoteIdentifier(identifier: string): string {
   return identifier.slice(1, -1).replaceAll('``', '`');
 }
 
-export function assertReadOnlyGrants(grants: readonly unknown[], databaseName: string): void {
+export function assertReadOnlyGrants(grants: readonly unknown[], databaseName: string, allowWrite = false): void {
   if (grants.length === 0) throw new Error('不安全或无法识别的数据库授权');
 
   for (const grant of grants) {
@@ -48,7 +48,8 @@ export function assertReadOnlyGrants(grants: readonly unknown[], databaseName: s
     const quotedDatabase = match?.[3];
     const allowed = privilege === 'USAGE'
       ? scope === '*.*'
-      : privilege === 'SELECT' && quotedDatabase !== undefined && unquoteIdentifier(quotedDatabase) === databaseName;
+      : (privilege === 'SELECT' || (allowWrite && privilege === 'ALL PRIVILEGES'))
+        && quotedDatabase !== undefined && unquoteIdentifier(quotedDatabase) === databaseName;
     if (!allowed) throw new Error('不安全或无法识别的数据库授权');
   }
 }
@@ -92,7 +93,7 @@ export function createDatabase(config: AppConfig): DatabasePools {
         if (!session) throw new Error('数据库未返回会话状态');
         const tables = tableRows.map((row) => row.TABLE_NAME);
         const grants: unknown[] = grantRows.flatMap((row) => Object.values(row as unknown as Record<string, unknown>));
-        assertReadOnlyGrants(grants, config.DB_NAME);
+        assertReadOnlyGrants(grants, config.DB_NAME, write === read || config.DB_USER === config.DB_WRITE_USER);
         return {
           connected: true,
           timeZone: session.time_zone,

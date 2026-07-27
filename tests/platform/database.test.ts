@@ -2,6 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { assertReadOnlyGrants } from '../../src/platform/database.js';
 
 describe('read-only MySQL grant validation', () => {
+  it('accepts a full-access account when the same account is used for writes', () => {
+    expect(() => assertReadOnlyGrants([
+      "GRANT USAGE ON *.* TO 'qjm'@'127.0.0.1'",
+      "GRANT ALL PRIVILEGES ON `qjm`.* TO 'qjm'@'127.0.0.1'",
+    ], 'qjm', true)).not.toThrow();
+  });
+
   it('accepts only USAGE globally and SELECT on the configured database', () => {
     expect(() => assertReadOnlyGrants([
       "GRANT USAGE ON *.* TO `reader`@`localhost`",

@@ -11,7 +11,7 @@ export class MysqlRecognitionWorkerRepository implements RecognitionWorkerReposi
     const connection = await this.pool.getConnection();
     try {
       await connection.beginTransaction();
-      const [rows] = await connection.execute("SELECT id,message_id,user_id,upload_path,mime_type,attempt_count FROM recognition_jobs WHERE kind='image' AND ((status='pending' AND next_attempt_at<=NOW()) OR (status='processing' AND lease_expires_at<NOW())) ORDER BY id LIMIT 1 FOR UPDATE SKIP LOCKED");
+      const [rows] = await connection.execute("SELECT id,message_id,user_id,upload_path,mime_type,attempt_count FROM recognition_jobs WHERE kind='image' AND ((status='pending' AND next_attempt_at<=NOW()) OR (status='processing' AND lease_expires_at<NOW())) ORDER BY id LIMIT 1 FOR UPDATE");
       const job = (rows as ClaimedImageJob[])[0];
       if (!job) { await connection.commit(); return null; }
       const [result] = await connection.execute("UPDATE recognition_jobs SET status='processing',attempt_count=attempt_count+1,lease_owner=?,lease_expires_at=DATE_ADD(NOW(),INTERVAL ? SECOND),started_at=COALESCE(started_at,NOW()),updated_at=NOW() WHERE id=?", [workerId, leaseSeconds, job.id]);
