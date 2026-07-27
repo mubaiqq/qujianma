@@ -18,6 +18,13 @@ describe('API token service and legacy route', () => {
     expect(await service.get(7)).toMatchObject({ id: 3, token: 'raw token', url: 'https://pickup.example/api/ingest?k=raw%20token', token_prefix: 'abcdef12' });
   });
 
+  it('creates the first API connection when a user has no token yet', async () => {
+    const repository = { findLatestActive: vi.fn().mockResolvedValue(null), regenerate: vi.fn().mockResolvedValue(undefined) };
+    const service = new ApiTokenService(repository, { baseUrl: 'https://pickup.example', generate: () => 'b'.repeat(48), hash: v => `hash:${v}`, encrypt: v => `enc:${v}`, decrypt: vi.fn() });
+    await expect(service.get(7)).resolves.toEqual({ url: `https://pickup.example/api/ingest?k=${'b'.repeat(48)}`, token: 'b'.repeat(48) });
+    expect(repository.regenerate).toHaveBeenCalledOnce();
+  });
+
   it('regenerates atomically and returns the exact success contract', async () => {
     const repository = { findLatestActive: vi.fn(), regenerate: vi.fn().mockResolvedValue(undefined) };
     const service = new ApiTokenService(repository, { baseUrl: 'https://pickup.example', generate: () => 'a'.repeat(48), hash: v => `hash:${v}`, encrypt: v => `enc:${v}`, decrypt: vi.fn() });

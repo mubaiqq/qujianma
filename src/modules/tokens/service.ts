@@ -8,7 +8,8 @@ export interface TokenCrypto { generate():string; hash(value:string):string; enc
 export class ApiTokenService {
   constructor(private readonly repository:ApiTokenRepository, private readonly crypto:TokenCrypto) {}
   async get(userId:number) {
-    const row=await this.repository.findLatestActive(userId); if(!row)return null;
+    const row=await this.repository.findLatestActive(userId);
+    if(!row)return this.regenerate(userId);
     const token=this.crypto.decrypt(row.tokenCiphertext);
     return { id:row.id,name:row.name,token_prefix:row.tokenPrefix,last_used_at:row.lastUsedAt,created_at:row.createdAt,token,url:this.url(token) };
   }
