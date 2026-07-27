@@ -7,11 +7,11 @@ import type { AppConfig } from '../../src/platform/config.js';
 
 const root = resolve(import.meta.dirname, '../..');
 const expectedHashes: Record<string, string> = {
-  'public/assets/css/app.css': '8d18938af32d31c6912764e0f57ac560f26865156f9ec20b4d55ff49248dec3b',
-  'public/assets/js/app.js': '5ecc8e5194549eeaefa48f67911b3fd7a8c963766f1d7229911976072315752d',
+  'public/assets/css/app.css': '995a3d10cb79992539e6b8d8198ece8105589a8506a9f455544abf2b556c5156',
+  'public/assets/js/app.js': '77cfd060a42d95cbc76ef3438cdd6e2272a4a960d0da651cc65b40c86b8d7659',
   'public/assets/js/login.js': '190a69d3f98b8ccb8db2f4b848b24dac2583d35a5398e63054fd1b45cdc55d00',
   'public/manifest.webmanifest': '1cb199ce12b4536a4221d692aadc939c9fa0bd36bab217116f5b598d8791ea7a',
-  'public/service-worker.js': '6c120fe1cfcfe6b24e1c1bdb14f6ca4c529503efc9c4dfac6dab54c438068d29',
+  'public/service-worker.js': 'ece34bcc14edec576467a8b136c818f30bf6a8252a35d9361ca216694cb6bf70',
 };
 
 const config: AppConfig = {
