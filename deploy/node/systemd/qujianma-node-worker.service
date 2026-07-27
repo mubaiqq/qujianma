@@ -1,0 +1,35 @@
+[Unit]
+Description=Qujianma Node Notification Worker
+After=network-online.target qujianma-node-api.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=qujianma
+Group=qujianma
+WorkingDirectory=/opt/qujianma-node/current
+Environment=WORKER_ENABLED=true
+Environment=INSTALL_DATA_ROOT=/opt/qujianma-node/shared
+ExecStart=/opt/qujianma-node/current/scripts/systemd-worker-entrypoint.sh /usr/bin/node /opt/qujianma-node/current/dist/worker.js
+Restart=on-failure
+RestartSec=3s
+TimeoutStopSec=60s
+KillSignal=SIGTERM
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/qujianma-node/shared
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictRealtime=true
+CapabilityBoundingSet=
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=qujianma-node-worker
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,28 @@
+{
+  "id": "/",
+  "name": "取件助手",
+  "short_name": "取件助手",
+  "description": "取件码识别与管理助手",
+  "lang": "zh-CN",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone"],
+  "orientation": "portrait",
+  "background_color": "#f2f5f9",
+  "theme_color": "#f2f5f9",
+  "icons": [
+    {
+      "src": "/assets/icons/apple-touch-icon-v2.png?v=20260724-icon-2",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icons/favicon-512.png?v=20260724-icon-1",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

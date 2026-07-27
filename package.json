@@ -1,0 +1,45 @@
+{
+  "name": "qujianma-node",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "取件助手 Node.js + TypeScript 渐进迁移项目",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "dev:worker": "tsx watch src/worker.ts",
+    "build": "tsc -p tsconfig.build.json && node scripts/copy-runtime-assets.js",
+    "start": "node dist/server.js",
+    "worker": "node dist/worker.js",
+    "recognition-worker": "node dist/recognition-worker.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/multipart": "^10.1.0",
+    "@fastify/static": "^10.1.2",
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^17.2.1",
+    "fastify": "^5.4.0",
+    "mysql2": "^3.14.3",
+    "pino": "^9.7.0",
+    "web-push": "^3.6.7",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^24.1.0",
+    "@types/web-push": "^3.6.4",
+    "eslint": "^10.8.0",
+    "globals": "^16.3.0",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.65.0",
+    "vitest": "^3.2.4"
+  }
+}

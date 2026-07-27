@@ -1,0 +1,31 @@
+[Unit]
+Description=Qujianma Node API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=qujianma
+Group=qujianma
+WorkingDirectory=/opt/qujianma-node/current
+EnvironmentFile=-/opt/qujianma-node/shared/app.env
+Environment=INSTALL_DATA_ROOT=/opt/qujianma-node/shared
+Environment=HOST=0.0.0.0
+Environment=PORT=38765
+ExecStart=/usr/bin/node /opt/qujianma-node/current/dist/entrypoint.js
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=30s
+KillSignal=SIGTERM
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/qujianma-node/shared
+UMask=0027
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=qujianma-node-api
+
+[Install]
+WantedBy=multi-user.target

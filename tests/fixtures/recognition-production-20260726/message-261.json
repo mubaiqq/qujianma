@@ -1,0 +1,35 @@
+{
+  "fixture_version": 1,
+  "source_message_id": 261,
+  "message": {
+    "raw_message": "欢猫驿站\n下午5:16\n【欢猫驿站】您的韵达快递包裹已到通达小区63号韵达超市，请凭7-4-1318取件\n提醒我",
+    "ai_result_json": {
+      "unparsed": "[object Object]"
+    },
+    "ai_status": "success",
+    "parse_status": "parsed",
+    "ai_model": "doubao-seed-evolving"
+  },
+  "parcels": [
+    {
+      "source_parcel_id": 244,
+      "pickup_code": "7-4-1318",
+      "courier_name": "韵达快递",
+      "status": "pending",
+      "needs_review": false,
+      "source_station_id": 129,
+      "station": {
+        "name": "韵达超市",
+        "address": "通达小区63号韵达超市"
+      }
+    }
+  ],
+  "recognition_job": {
+    "source_job_id": 18,
+    "status": "succeeded",
+    "mime_type": "image/jpeg",
+    "file_size": 66695,
+    "image_retention": "deleted_after_success"
+  },
+  "expected": "应识别为韵达快递。"
+}

@@ -1,0 +1,61 @@
+{
+  "model": "doubao-seed-evolving",
+  "current": {
+    "items": [
+      {
+        "source_id": 209,
+        "courier_name": "",
+        "evidence": "取件码：R-2-0901"
+      },
+      {
+        "source_id": 210,
+        "courier_name": "韵达快递",
+        "evidence": "取件码：R-2-1001"
+      },
+      {
+        "source_id": 211,
+        "courier_name": "",
+        "evidence": "取件码：R-2-1101"
+      },
+      {
+        "source_id": 212,
+        "courier_name": "圆通速递",
+        "evidence": "取件码：R-2-1201"
+      },
+      {
+        "source_id": 213,
+        "courier_name": "",
+        "evidence": "取件码：R-2-1301"
+      }
+    ]
+  },
+  "enhanced": {
+    "items": [
+      {
+        "source_id": 209,
+        "courier_name": "",
+        "evidence": "取件码：R-2-0901"
+      },
+      {
+        "source_id": 210,
+        "courier_name": "",
+        "evidence": "取件码：R-2-1001"
+      },
+      {
+        "source_id": 211,
+        "courier_name": "",
+        "evidence": "取件码：R-2-1101"
+      },
+      {
+        "source_id": 212,
+        "courier_name": "圆通速递",
+        "evidence": "取件码：R-2-1201，圆通速递妈妈驿站"
+      },
+      {
+        "source_id": 213,
+        "courier_name": "",
+        "evidence": "取件码：R-2-1301"
+      }
+    ]
+  }
+}

@@ -1,0 +1,13 @@
+# journal 默认由 journald 管理；仅当设置 StandardOutput=append 时使用本模板。
+/var/log/qujianma-node/*.log {
+  daily
+  rotate 14
+  size 20M
+  missingok
+  notifempty
+  compress
+  delaycompress
+  copytruncate
+  su qujianma qujianma
+  create 0640 qujianma qujianma
+}

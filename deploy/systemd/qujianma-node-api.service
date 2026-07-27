@@ -1,0 +1,21 @@
+[Unit]
+Description=取件助手 Node.js API（迁移环境）
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/qujianma-node
+EnvironmentFile=/home/ubuntu/qujianma-node/.env
+ExecStart=/usr/bin/node /home/ubuntu/qujianma-node/dist/server.js
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/home/ubuntu/qujianma-node/runtime
+
+[Install]
+WantedBy=multi-user.target

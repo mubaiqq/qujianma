@@ -1,0 +1,37 @@
+[
+  {
+    "source_id": 209,
+    "ocr_text": "【曲靖罗平火车站店】\n李红云\n地址：通达小区55号（原火车站菜鸟驿站）\n取件码：R-2-0901\n时间：今天14:23",
+    "model_courier_name": "李红云",
+    "expected_courier_name": "",
+    "reason": "孤立人名不是快递公司"
+  },
+  {
+    "source_id": 210,
+    "ocr_text": "【欢猫驿站】\n地址：通达小区63号韵达超市\n取件码：R-2-1001",
+    "model_courier_name": "",
+    "expected_courier_name": "韵达快递",
+    "reason": "明确文本韵达超市按业务规则规范为韵达快递"
+  },
+  {
+    "source_id": 211,
+    "ocr_text": "【曲靖罗平火车站店】\n地址：通达小区55号\n取件码：R-2-1101",
+    "model_courier_name": "",
+    "expected_courier_name": "",
+    "reason": "无承运商证据时留空"
+  },
+  {
+    "source_id": 212,
+    "ocr_text": "【妈妈驿站代收点】\n地址：罗平县客运北站客车进站口对面圆通速递妈妈驿站\n取件码：R-2-1201",
+    "model_courier_name": "",
+    "expected_courier_name": "圆通速递",
+    "reason": "明确文本圆通速递妈妈驿站按业务规则规范为圆通速递"
+  },
+  {
+    "source_id": 213,
+    "ocr_text": "【曲靖罗平火车站店】\n李红云\n地址：通达小区55号\n取件码：R-2-1301\n时间：07-25 14:30",
+    "model_courier_name": "李红云",
+    "expected_courier_name": "",
+    "reason": "孤立人名不是快递公司"
+  }
+]

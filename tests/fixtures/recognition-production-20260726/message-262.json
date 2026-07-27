@@ -1,0 +1,20 @@
+{
+  "fixture_version": 1,
+  "source_message_id": 262,
+  "message": {
+    "raw_message": "[图片等待识别]",
+    "ai_result_json": null,
+    "ai_status": "failed",
+    "parse_status": "needs_review",
+    "ai_model": ""
+  },
+  "parcels": [],
+  "recognition_job": {
+    "source_job_id": 19,
+    "status": "failed",
+    "mime_type": "image/png",
+    "file_size": 1308422,
+    "image_retention": "[REDACTED_CREDENTIAL]"
+  },
+  "expected": "失败图片回归资产；应保持失败/待复核语义，不伪造识别结果。"
+}

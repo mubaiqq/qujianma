@@ -1,0 +1,35 @@
+{
+  "fixture_version": 1,
+  "source_message_id": 260,
+  "message": {
+    "raw_message": "4:55\n5G 5G\n32\n运送中8\n我的包裹 物流客服 分享\n已放至代收点\n距离收货地300米\n导航\n已按预计时间为您准时送达\n联系快递员\n如有疑问，请联系快递员\n极兔\n极兔速递 JT2199033966697 | 复制 物流电话\n待取件 今天14:23\n曲靖罗平火车站店\n营业时间: 周一至周日 09:00~19:00\n通达小区55号（原火车站菜鸟驿站）\n取件码: 5-2-5266 | 复制\n联系驿站\n快件已由兔兔快递员李红云[REDACTED_PHONE]送达兔喜生活+暂存，取件地址：通达小区55号（原火车站菜鸟驿...展开\n查看更多物流信息\n收 罗平县火车站妈妈驿站\n柏乔会 187******40 号码保护中 已通过虚拟号码发货\nCoco&Mike洗护清洁旗舰店\n【母婴适用】荷荷巴油卸妆油眼唇脸三...\n【敏肌适用】植萃三合一卸妆油 x1\n200ml*1瓶(送湿敷卸妆棉*50片)",
+    "ai_result_json": {
+      "unparsed": "[object Object]"
+    },
+    "ai_status": "success",
+    "parse_status": "parsed",
+    "ai_model": "doubao-seed-evolving"
+  },
+  "parcels": [
+    {
+      "source_parcel_id": 243,
+      "pickup_code": "5-2-5266",
+      "courier_name": "极兔速递",
+      "status": "pending",
+      "needs_review": false,
+      "source_station_id": 128,
+      "station": {
+        "name": "兔喜生活",
+        "address": "通达小区55号"
+      }
+    }
+  ],
+  "recognition_job": {
+    "source_job_id": 17,
+    "status": "succeeded",
+    "mime_type": "image/jpeg",
+    "file_size": 193953,
+    "image_retention": "deleted_after_success"
+  },
+  "expected": "长地址应归属兔喜生活驿站；通达小区55号对应极兔快递。"
+}

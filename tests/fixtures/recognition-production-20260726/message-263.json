@@ -1,0 +1,47 @@
+{
+  "fixture_version": 1,
+  "source_message_id": 263,
+  "message": {
+    "raw_message": "取快递\n今日有 2 个快递待取\n兔喜快递超市代收点\n通达小区55号（原火车站菜鸟驿站）\n电话\n取件码 8-2-2886\n极兔速递 JT5507514037103\n妈妈驿站代收点\n罗平县客运北站客车进站口对面圆通速递妈妈驿站\n电话\n取件码 A-33-1652\n圆通快递 YT8889470564989\n查看全部快递",
+    "ai_result_json": {
+      "unparsed": "[object Object]"
+    },
+    "ai_status": "success",
+    "parse_status": "parsed",
+    "ai_model": "doubao-seed-evolving"
+  },
+  "parcels": [
+    {
+      "source_parcel_id": 245,
+      "pickup_code": "8-2-2886",
+      "courier_name": "极兔速递",
+      "status": "pending",
+      "needs_review": false,
+      "source_station_id": 128,
+      "station": {
+        "name": "兔喜生活",
+        "address": "通达小区55号"
+      }
+    },
+    {
+      "source_parcel_id": 246,
+      "pickup_code": "A-33-1652",
+      "courier_name": "圆通速递",
+      "status": "pending",
+      "needs_review": false,
+      "source_station_id": 130,
+      "station": {
+        "name": "圆通速递妈妈驿站",
+        "address": "罗平县客运北站客车进站口对面"
+      }
+    }
+  ],
+  "recognition_job": {
+    "source_job_id": 20,
+    "status": "succeeded",
+    "mime_type": "image/png",
+    "file_size": 703793,
+    "image_retention": "deleted_after_success"
+  },
+  "expected": "同图双卡不得串卡：8-2对应极兔快递，A33对应圆通速递。"
+}

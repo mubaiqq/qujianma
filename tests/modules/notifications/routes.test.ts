@@ -1,0 +1,5 @@
+import Fastify from 'fastify';
+import {describe,expect,it,vi} from 'vitest';
+import {registerNotificationRoutes} from '../../../src/modules/notifications/routes.js';
+function fixture(){const service={get:vi.fn().mockResolvedValue({vapid_public_key:'key',preferences:{},device_count:0,devices:[]}),subscribe:vi.fn(),unsubscribe:vi.fn(),savePreferences:vi.fn(),testPush:vi.fn()};const app=Fastify();registerNotificationRoutes(app,{service,resolveSession:vi.fn().mockResolvedValue({id:7}),verifyCsrf:()=>true});return {app,service};}
+describe('notification routes',()=>{it('gets isolated user settings',async()=>{const x=fixture();const r=await x.app.inject({method:'GET',url:'/api/notifications'});expect(x.service.get).toHaveBeenCalledWith(7);expect(r.statusCode).toBe(200);await x.app.close();});it('never reports test success unless sender delivered',async()=>{const x=fixture();x.service.testPush.mockResolvedValue({sent:0,failed:1});const r=await x.app.inject({method:'POST',url:'/api/notifications',payload:{action:'test_push'}});expect(r.statusCode).toBe(503);expect(r.json<{code:number}>().code).toBe(1);await x.app.close();});});

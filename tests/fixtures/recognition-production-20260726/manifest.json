@@ -1,0 +1,69 @@
+{
+  "fixture_version": 1,
+  "created_from": "production recognition records exported read-only on 2026-07-26",
+  "privacy": {
+    "sanitized": true,
+    "removed_fields": [
+      "user_id",
+      "client_ip",
+      "phone/mobile",
+      "token/api_key/password/secret/authorization"
+    ],
+    "replacement_markers": [
+      "[REDACTED_PHONE]",
+      "[REDACTED_IP]",
+      "[REDACTED_CREDENTIAL]"
+    ]
+  },
+  "cases": [
+    {
+      "source_message_id": 260,
+      "file": "message-260.json",
+      "expected": "长地址应归属兔喜生活驿站；通达小区55号对应极兔快递。"
+    },
+    {
+      "source_message_id": 261,
+      "file": "message-261.json",
+      "expected": "应识别为韵达快递。"
+    },
+    {
+      "source_message_id": 262,
+      "file": "message-262.json",
+      "expected": "失败图片回归资产；应保持失败/待复核语义，不伪造识别结果。"
+    },
+    {
+      "source_message_id": 263,
+      "file": "message-263.json",
+      "expected": "同图双卡不得串卡：8-2对应极兔快递，A33对应圆通速递。"
+    }
+  ],
+  "assets": [
+    {
+      "source_job_id": 19,
+      "source_message_id": 262,
+      "file": "assets/job-19-failed.png",
+      "mime_type": "image/png",
+      "width": 736,
+      "height": 1600,
+      "size_bytes": 1308422,
+      "sha256": "008a162853857bd68dd6e1657036bc05aef95b8294ab3c687ab82bd3e60fd015"
+    }
+  ],
+  "unavailable_success_assets": [
+    {
+      "source_job_id": 17,
+      "reason": "deleted_after_success_by_design",
+      "recoverable": false
+    },
+    {
+      "source_job_id": 18,
+      "reason": "deleted_after_success_by_design",
+      "recoverable": false
+    },
+    {
+      "source_job_id": 20,
+      "reason": "deleted_after_success_by_design",
+      "recoverable": false
+    }
+  ]
+}

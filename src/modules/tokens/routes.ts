@@ -1,0 +1,5 @@
+import type { FastifyInstance } from 'fastify';
+import type { AuthContext } from '../../platform/auth-context.js';
+import type { ApiTokenService } from './service.js';
+type Methods=Pick<ApiTokenService,'get'|'regenerate'>;
+export function registerTokenRoutes(app:FastifyInstance,o:{auth:AuthContext;service:Methods}):void{app.all('/api/tokens',async(req,reply)=>{reply.header('Cache-Control','no-store');const c=await o.auth.require(req,reply);if(!c)return reply;if(req.method==='GET')return {code:0,data:await o.service.get(c.user.id)};if(req.method!=='POST')return reply.status(405).send({code:1,message:'仅支持GET或POST'});if(!o.auth.requireCsrf(req,reply,c))return reply;const b=req.body&&typeof req.body==='object'&&!Array.isArray(req.body)?req.body as Record<string,unknown>:{};if(b.action!=='regenerate')return reply.status(400).send({code:1,message:'未知操作'});try{return {code:0,message:'API连接已重新生成',data:await o.service.regenerate(c.user.id)};}catch{return reply.status(500).send({code:1,message:'重新生成失败'});}});}
