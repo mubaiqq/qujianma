@@ -5,7 +5,7 @@
   "type": "module",
   "description": "取件助手 Node.js + TypeScript 渐进迁移项目",
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=22.12.0"
   },
   "scripts": {
     "dev": "tsx watch src/server.ts",

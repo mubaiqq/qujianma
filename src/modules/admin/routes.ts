@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
-import sanitizeHtmlModule = require('sanitize-html'); // eslint-disable-line @typescript-eslint/no-require-imports
 import type { AuthContext } from '../../platform/auth-context.js';
 import type { AdminOverview, AdminRepository, AdminUserDetail, AdminUserSummary, PublishedArticle } from './repository.js';
+import { sanitizeArticle } from '../articles/sanitize.js';
 
 export interface AdminViews {
   dashboard(input: { overview: AdminOverview; users: AdminUserSummary[] }): string;
@@ -39,11 +39,7 @@ async function isAdmin(
 const object=(value:unknown):Record<string,unknown>=>{if(value&&typeof value==='object'&&!Array.isArray(value))return value as Record<string,unknown>;if(typeof value==='string')return Object.fromEntries(new URLSearchParams(value));return {}};
 const text=(value:unknown,fallback=''):string=>typeof value==='string'?value:fallback;
 const validDestination=(value:string):boolean=>{if(value.startsWith('/')&&!value.startsWith('//'))return true;try{const parsed=new URL(value);return parsed.protocol==='https:'||parsed.protocol==='http:';}catch{return false;}};
-const safeColor=(value:string):string|null=>/^(?:#[0-9a-f]{3}|#[0-9a-f]{6}|rgb\(\s*(?:25[0-5]|2[0-4]\d|1?\d?\d)\s*,\s*(?:25[0-5]|2[0-4]\d|1?\d?\d)\s*,\s*(?:25[0-5]|2[0-4]\d|1?\d?\d)\s*\))$/i.test(value.trim())?value.trim().toLowerCase():null;
-const cleanStyle=(style:string):string=>style.split(';').map(declaration=>{const [rawName,...rawValue]=declaration.split(':'),name=rawName?.trim().toLowerCase(),value=rawValue.join(':').trim();if(name==='color'){const color=safeColor(value);return color?`color:${color}`:'';}if(name==='text-align'&&['left','center','right','justify'].includes(value.toLowerCase()))return `text-align:${value.toLowerCase()}`;return '';}).filter(Boolean).join(';');
-const sanitizeHtml=sanitizeHtmlModule;
-const safeHref=(href:string):string=>{const value=href.trim();if(value.includes('\\')||Array.from(value).some(character=>{const code=character.charCodeAt(0);return code<32||code===127;})||value.startsWith('//'))return '';if(value.startsWith('/'))return value;try{const url=new URL(value);return url.protocol==='http:'||url.protocol==='https:'?url.href:'';}catch{return '';}};
-const sanitizeArticle=(html:string):string=>sanitizeHtml(html,{allowedTags:['p','div','h1','h2','h3','h4','strong','b','em','i','u','s','ul','ol','li','blockquote','br','hr','pre','code','table','thead','tbody','tr','th','td','span','font','a','fz'],allowedAttributes:{p:['style'],div:['style'],h1:['style'],h2:['style'],h3:['style'],h4:['style'],blockquote:['style'],td:['style'],th:['style'],span:['style','class','role','tabindex'],font:['color'],a:['href','target','rel']},disallowedTagsMode:'discard',exclusiveFilter:frame=>['script','style','iframe','object','embed','form','svg','math'].includes(frame.tag),transformTags:{font:(_tag,attrs)=>({tagName:'span',attribs:{style:safeColor(attrs.color??'')?`color:${safeColor(attrs.color??'')}`:''}}),'*':(tag,attrs)=>{if(tag==='fz')return {tagName:'span',attribs:{class:'article-copy',role:'button',tabindex:'0'}};const result={...attrs};if(result.style!==undefined){result.style=cleanStyle(result.style);if(!result.style)delete result.style;}if(tag==='span'){result.class=(result.class??'').split(/\s+/).includes('article-tab')?'article-tab':'';if(!result.class)delete result.class;}if(tag==='a'){result.href=safeHref(result.href??'');if(!result.href)delete result.href;if(result.target==='_blank')result.rel='noopener noreferrer';else delete result.target;}return {tagName:tag,attribs:result};}},allowedSchemes:['http','https'],allowProtocolRelative:false}).trim();
+
 const articleId=(raw:unknown):number=>typeof raw==='string'&&/^\d+$/.test(raw)&&Number.isSafeInteger(Number(raw))&&Number(raw)>0?Number(raw):0;
 const articleInput=(body:unknown):{title:string;summary:string;contentHtml:string}|null=>{const input=object(body),title=text(input.title).trim(),summary=text(input.summary).trim(),contentHtml=sanitizeArticle(text(input.contentHtml,text(input.article_content)).trim());return title.length>0&&title.length<=80&&summary.length>0&&summary.length<=240&&contentHtml.length>0&&contentHtml.length<=100_000?{title,summary,contentHtml}:null;};
 

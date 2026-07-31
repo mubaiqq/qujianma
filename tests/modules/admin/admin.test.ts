@@ -286,6 +286,15 @@ describe('admin routes', () => {
     await app.close();
   });
 
+  it('rejects rich text XSS vectors and deceptive links', async () => {
+    vi.mocked(repository.updateArticle).mockClear();
+    const app = Fastify(); registerAdminRoutes(app, { auth: auth(1), repository, views, broadcaster });
+    const malicious = '<p onmouseover="bad()">安全文字<a href="javascript:bad()">脚本</a><a href="//evil.example">协议相对</a><a href="/\\evil.example">反斜杠</a></p><script>bad()</script><svg><script>bad()</script></svg><math><mtext>bad</mtext></math><iframe src="https://evil.example"></iframe>';
+    expect((await app.inject({ method: 'PUT', url: '/admin/articles/9', headers: { 'x-csrf-token': 'csrf' }, payload: { title: '安全测试', summary: '摘要', contentHtml: malicious } })).statusCode).toBe(200);
+    expect(repository.updateArticle).toHaveBeenLastCalledWith(9, { title: '安全测试', summary: '摘要', contentHtml: '<p>安全文字<a>脚本</a><a>协议相对</a><a>反斜杠</a></p>' });
+    await app.close();
+  });
+
   it('deletes an article through an admin and CSRF protected API', async () => {
     const app = Fastify(); registerAdminRoutes(app, { auth: auth(1), repository, views, broadcaster });
     const response = await app.inject({ method: 'DELETE', url: '/admin/articles/9', headers: { 'x-csrf-token': 'csrf' } });

@@ -111,6 +111,21 @@ describe('standalone page route factory', () => {
     await app.close();
   });
 
+  it('sanitizes legacy stored article HTML again when rendering',async()=>{
+    const dirty='<p onclick="bad()">正文<a href="javascript:bad()">危险链接</a><fz style="color:red">A-123</fz></p><script>globalThis.pwned=true</script><svg><script>bad()</script></svg><iframe src="https://evil.example"></iframe>';
+    const articles={listArticles:vi.fn(),getArticle:vi.fn().mockResolvedValue({id:9,title:'历史文章',summary:'摘要',contentHtml:dirty,authorName:'管理员',createdAt:'2026-07-27'})};
+    const app=Fastify();registerPageRoutes(app,{auth:auth({id:7,username:'alice'}),views,articles});
+    const response=await app.inject('/article/9');
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toContain('<p>正文<a>危险链接</a><span class="article-copy" role="button" tabindex="0">A-123</span></p>');
+    expect(response.body).not.toContain('onclick=');
+    expect(response.body).not.toContain('javascript:');
+    expect(response.body).not.toContain('globalThis.pwned');
+    expect(response.body).not.toContain('<svg');
+    expect(response.body).not.toContain('<iframe');
+    await app.close();
+  });
+
   it('ships readable styles for rich article colors, dividers, tables, tabs, quotes, and code',()=>{
     const template=readFileSync(resolve(process.cwd(),'views/public/article.html'),'utf8');
     expect(template).toContain('.article-content hr{');
@@ -130,6 +145,16 @@ describe('standalone page route factory', () => {
     expect(template).toContain("showCopyToast('复制成功')");
     expect(template).toContain("showCopyToast('复制失败',false)");
     expect(template).not.toContain('alert(');
+  });
+
+  it('upgrades escaped and editor-split fz text markers on article view',()=>{
+    const template=readFileSync(resolve(process.cwd(),'views/public/article.html'),'utf8');
+    expect(template).toContain('activateTextCopyMarkers');
+    expect(template).toContain("text.indexOf('<fz>',from)");
+    expect(template).toContain("text.indexOf('</fz>',start+4)");
+    expect(template).toContain("copy.className='article-copy'");
+    expect(template).toContain("copy.setAttribute('role','button')");
+    expect(template).toContain("copy.tabIndex=0");
   });
 
   it('removes a deleted article from the message center and returns 404 for its old link',async()=>{
