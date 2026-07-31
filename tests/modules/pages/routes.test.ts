@@ -121,6 +121,17 @@ describe('standalone page route factory', () => {
     expect(template).toContain('overflow-x:auto');
   });
 
+  it('supports clickable fz copy controls with custom success and failure feedback',()=>{
+    const template=readFileSync(resolve(process.cwd(),'views/public/article.html'),'utf8');
+    expect(template).toContain('.article-content .article-copy{');
+    expect(template).toContain('id="articleCopyToast"');
+    expect(template).toContain("closest('.article-copy')");
+    expect(template).toContain("navigator.clipboard.writeText(copy.textContent.trim())");
+    expect(template).toContain("showCopyToast('复制成功')");
+    expect(template).toContain("showCopyToast('复制失败',false)");
+    expect(template).not.toContain('alert(');
+  });
+
   it('removes a deleted article from the message center and returns 404 for its old link',async()=>{
     const stored=new Map([[9,{id:9,title:'待删除公告',summary:'摘要',contentHtml:'<p>正文</p>',authorName:'管理员',createdAt:'2026-07-27 09:00:00'}]]);
     const articles={listArticles:vi.fn(async()=>[...stored.values()]),getArticle:vi.fn(async(id:number)=>stored.get(id)??null)};

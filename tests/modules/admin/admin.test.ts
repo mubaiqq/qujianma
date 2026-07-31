@@ -269,7 +269,19 @@ describe('admin routes', () => {
     expect(response.statusCode).toBe(200);
     expect(repository.updateArticle).toHaveBeenCalledWith(9, {
       title: '格式公告', summary: '摘要',
-      contentHtml: '<p style="color:#e74c3c;text-align:center"><strong>重点</strong><a href="https://example.com" target="_blank" rel="noopener noreferrer">链接</a><span style="color:rgb(49, 91, 234)">蓝字</span><span style="color:#16a085">绿字</span></p><hr><table><tbody><tr><th>项目</th><td>内容</td></tr></tbody></table><span class="article-tab">缩进</span>',
+      contentHtml: '<p style="color:#e74c3c;text-align:center"><strong>重点</strong><a href="https://example.com/" target="_blank" rel="noopener noreferrer">链接</a><span style="color:rgb(49, 91, 234)">蓝字</span><span style="color:#16a085">绿字</span></p><hr /><table><tbody><tr><th>项目</th><td>内容</td></tr></tbody></table><span class="article-tab">缩进</span>',
+    });
+    await app.close();
+  });
+
+  it('converts fz markup into a safe copy control and strips attacker attributes', async () => {
+    vi.mocked(repository.updateArticle).mockClear();
+    const app = Fastify(); registerAdminRoutes(app, { auth: auth(1), repository, views, broadcaster });
+    const response = await app.inject({ method: 'PUT', url: '/admin/articles/9', headers: { 'x-csrf-token': 'csrf' }, payload: { title: '复制格式', summary: '摘要', contentHtml: '<p>取件码：<fz onclick="bad()" style="color:red">A-123</fz></p>' } });
+    expect(response.statusCode).toBe(200);
+    expect(repository.updateArticle).toHaveBeenLastCalledWith(9, {
+      title: '复制格式', summary: '摘要',
+      contentHtml: '<p>取件码：<span class="article-copy" role="button" tabindex="0">A-123</span></p>',
     });
     await app.close();
   });
