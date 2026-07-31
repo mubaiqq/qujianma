@@ -139,7 +139,7 @@ CREATE TABLE IF NOT EXISTS parcels (
  user_id BIGINT UNSIGNED NOT NULL,
  message_id BIGINT UNSIGNED NOT NULL,
  station_id BIGINT UNSIGNED NULL,
- pickup_code VARCHAR(80) NOT NULL,
+ pickup_code VARCHAR(80) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
  courier_name VARCHAR(80) NOT NULL DEFAULT '',
  pickup_time_text VARCHAR(80) NOT NULL DEFAULT '',
  status ENUM('pending','picked_up') NOT NULL DEFAULT 'pending',

@@ -28,7 +28,12 @@ describe('home UI regression contracts', () => {
     expect(appJs).toContain('官方模型异常，请添加自己的模型');
     expect(appJs).toContain('https://q.mcoud.cn/article/2');
     expect(appJs).toContain('自己添加模型教程');
-    expect(appJs).toContain('${officialAiCard(official,true)}');
+    expect(appJs).toContain("official?.is_enabled===1?officialAiCard(official,true):''");
     expect(appJs).toContain("let official={available:0,selected:0};try{official=(await api('/api/ai/official')).data}catch");
+  });
+
+  it('hides the official-model card completely while free access is disabled',()=>{
+    expect(appJs).toContain("official?.is_enabled===1?officialAiCard(official):''");
+    expect(appJs).toContain("official?.is_enabled===1?officialAiCard(official,true):''");
   });
 });
