@@ -109,6 +109,18 @@ describe('standalone page route factory', () => {
     await app.close();
   });
 
+  it('removes a deleted article from the message center and returns 404 for its old link',async()=>{
+    const stored=new Map([[9,{id:9,title:'待删除公告',summary:'摘要',contentHtml:'<p>正文</p>',authorName:'管理员',createdAt:'2026-07-27 09:00:00'}]]);
+    const articles={listArticles:vi.fn(async()=>[...stored.values()]),getArticle:vi.fn(async(id:number)=>stored.get(id)??null)};
+    const app=Fastify();registerPageRoutes(app,{auth:auth({id:7,username:'alice'}),views,articles});
+    expect((await app.inject('/articles')).body).toContain('待删除公告');
+    expect((await app.inject('/article/9')).statusCode).toBe(200);
+    stored.delete(9);
+    expect((await app.inject('/articles')).body).not.toContain('待删除公告');
+    expect((await app.inject('/article/9')).statusCode).toBe(404);
+    await app.close();
+  });
+
   it('rejects unsafe push wrapper destinations and protects the wrapper with login', async () => {
     const guest = Fastify(); registerPageRoutes(guest, { auth: auth(null), views: { ...views, push: '__PUSH_TITLE__ __PUSH_TARGET__' } });
     expect((await guest.inject('/push-view?target=https%3A%2F%2Fexample.com')).headers.location).toBe('/login');

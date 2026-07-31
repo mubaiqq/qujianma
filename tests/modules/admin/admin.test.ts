@@ -34,6 +34,29 @@ describe('admin repository', () => {
     const sql = execute.mock.calls.map(([statement]) => String(statement)).join('\n').toLowerCase();
     expect(sql).not.toMatch(/password_hash|token_hash|token_ciphertext|api_key_ciphertext|base_url|api_key_hint|raw_message|endpoint|p256dh|\bauth\b/);
   });
+
+  it('updates articles with parameterized SQL and reports whether a row exists', async () => {
+    const execute = vi.fn()
+      .mockResolvedValueOnce([{ affectedRows: 1 }, []])
+      .mockResolvedValueOnce([{ affectedRows: 0 }, []]);
+    const repository = new MysqlAdminRepository({ execute });
+    const input = { title: '新标题', summary: '新摘要', contentHtml: '<p>新正文</p>' };
+
+    expect(await repository.updateArticle(9, input)).toBe(true);
+    expect(execute).toHaveBeenNthCalledWith(1, 'UPDATE published_articles SET title=?,summary=?,content_html=? WHERE id=?', ['新标题', '新摘要', '<p>新正文</p>', 9]);
+    expect(await repository.updateArticle(99, input)).toBe(false);
+  });
+
+  it('deletes articles with parameterized SQL and reports whether a row exists', async () => {
+    const execute = vi.fn()
+      .mockResolvedValueOnce([{ affectedRows: 1 }, []])
+      .mockResolvedValueOnce([{ affectedRows: 0 }, []]);
+    const repository = new MysqlAdminRepository({ execute });
+
+    expect(await repository.deleteArticle(9)).toBe(true);
+    expect(execute).toHaveBeenNthCalledWith(1, 'DELETE FROM published_articles WHERE id=?', [9]);
+    expect(await repository.deleteArticle(99)).toBe(false);
+  });
 });
 
 describe('admin views', () => {
@@ -247,6 +270,17 @@ describe('admin routes', () => {
     expect((await app.inject({ method: 'PUT', url: '/admin/articles/bad', headers: { 'x-csrf-token': 'csrf' }, payload: { title: '标题', summary: '摘要', contentHtml: '<p>正文</p>' } })).statusCode).toBe(404);
     expect((await app.inject({ method: 'PUT', url: '/admin/articles/9', headers: { 'x-csrf-token': 'csrf' }, payload: { title: '', summary: '摘要', contentHtml: '<p>正文</p>' } })).statusCode).toBe(400);
     expect((await app.inject({ method: 'DELETE', url: '/admin/articles/9' })).statusCode).toBe(403);
+    await app.close();
+  });
+
+  it('rejects article updates and deletes from non-founder users', async () => {
+    vi.mocked(repository.updateArticle).mockClear();
+    vi.mocked(repository.deleteArticle).mockClear();
+    const app = Fastify(); registerAdminRoutes(app, { auth: auth(2), repository, views, broadcaster });
+    expect((await app.inject({ method: 'PUT', url: '/admin/articles/9', headers: { 'x-csrf-token': 'csrf' }, payload: { title: '标题', summary: '摘要', contentHtml: '<p>正文</p>' } })).statusCode).toBe(403);
+    expect((await app.inject({ method: 'DELETE', url: '/admin/articles/9', headers: { 'x-csrf-token': 'csrf' } })).statusCode).toBe(403);
+    expect(repository.updateArticle).not.toHaveBeenCalled();
+    expect(repository.deleteArticle).not.toHaveBeenCalled();
     await app.close();
   });
 });
