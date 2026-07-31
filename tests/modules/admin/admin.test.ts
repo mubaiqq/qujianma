@@ -104,6 +104,11 @@ describe('admin views', () => {
     expect(html).toContain('navigator.clipboard.writeText');
     expect(html).toContain("label.textContent='已复制'");
     expect(html).toContain('href="/admin/articles"');
+    expect(html).toContain('data-command="foreColor"');
+    expect(html).toContain('data-action="separator"');
+    expect(html).toContain('data-action="tab"');
+    expect(html).toContain('data-command="justifyCenter"');
+    expect(html).toContain('data-command="createLink"');
   });
 
   it('renders article management with escaped data, inline editing, and a custom delete dialog', () => {
@@ -120,6 +125,9 @@ describe('admin views', () => {
     expect(html).toContain("button.textContent='✓ 保存成功'");
     expect(html).not.toContain('window.confirm');
     expect(html).not.toContain('alert(');
+    expect(html).toContain('data-edit-command="foreColor"');
+    expect(html).toContain('data-edit-action="separator"');
+    expect(html).toContain('data-edit-action="tab"');
   });
 
   it('renders a consistent responsive user detail with safe provider values', () => {
@@ -251,6 +259,18 @@ describe('admin routes', () => {
     expect(response.statusCode).toBe(200);
     expect(repository.updateArticle).toHaveBeenCalledWith(9, { title: '更新公告', summary: '新摘要', contentHtml: '<p>新正文</p>' });
     expect(response.json()).toEqual({ code: 0, message: '保存成功' });
+    await app.close();
+  });
+
+  it('preserves safe rich text colors, links, dividers, tables, and tab spans while stripping unsafe markup', async () => {
+    const app = Fastify(); registerAdminRoutes(app, { auth: auth(1), repository, views, broadcaster });
+    const rich = '<p style="color:#e74c3c;text-align:center" onclick="bad()"><strong>重点</strong><a href="https://example.com" target="_blank">链接</a><span style="color:rgb(49, 91, 234)">蓝字</span><font color="#16a085">绿字</font></p><hr><table><tbody><tr><th>项目</th><td>内容</td></tr></tbody></table><span class="article-tab" style="color:red">缩进</span><img src=x onerror=bad()><script>bad()</script>';
+    const response = await app.inject({ method: 'PUT', url: '/admin/articles/9', headers: { 'x-csrf-token': 'csrf' }, payload: { title: '格式公告', summary: '摘要', contentHtml: rich } });
+    expect(response.statusCode).toBe(200);
+    expect(repository.updateArticle).toHaveBeenCalledWith(9, {
+      title: '格式公告', summary: '摘要',
+      contentHtml: '<p style="color:#e74c3c;text-align:center"><strong>重点</strong><a href="https://example.com" target="_blank" rel="noopener noreferrer">链接</a><span style="color:rgb(49, 91, 234)">蓝字</span><span style="color:#16a085">绿字</span></p><hr><table><tbody><tr><th>项目</th><td>内容</td></tr></tbody></table><span class="article-tab">缩进</span>',
+    });
     await app.close();
   });
 

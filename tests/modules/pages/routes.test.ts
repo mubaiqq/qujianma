@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import Fastify from 'fastify';
 import vm from 'node:vm';
 import { describe, expect, it, vi } from 'vitest';
@@ -107,6 +109,16 @@ describe('standalone page route factory', () => {
     const legacyDetail=await app.inject('/articles/9');expect(legacyDetail.statusCode).toBe(302);expect(legacyDetail.headers.location).toBe('/article/9');
     const list=await app.inject('/articles');expect(list.body).toContain('公告');expect(list.body).toContain('href="/article/9"');expect(list.body).toContain('id="articlesBack"');expect(list.body).toContain("history.back()");
     await app.close();
+  });
+
+  it('ships readable styles for rich article colors, dividers, tables, tabs, quotes, and code',()=>{
+    const template=readFileSync(resolve(process.cwd(),'views/public/article.html'),'utf8');
+    expect(template).toContain('.article-content hr{');
+    expect(template).toContain('.article-content table{');
+    expect(template).toContain('.article-content .article-tab{');
+    expect(template).toContain('.article-content blockquote{');
+    expect(template).toContain('.article-content pre{');
+    expect(template).toContain('overflow-x:auto');
   });
 
   it('removes a deleted article from the message center and returns 404 for its old link',async()=>{
