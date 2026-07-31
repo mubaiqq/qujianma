@@ -32,6 +32,9 @@ import { registerTokenRoutes } from './modules/tokens/routes.js';
 import { registerAndroidDeviceRoutes } from './modules/android/routes.js';
 import { registerIngestRoutes } from './modules/ingest/routes.js';
 import { registerAiRoutes } from './modules/ai/routes.js';
+import { registerOfficialAiRoutes } from './modules/ai/official-routes.js';
+import type { OfficialAiService } from './modules/ai/official.js';
+import { officialAiAdminView } from './modules/admin/official-ai-view.js';
 import { registerRecognitionRoutes } from './modules/recognition/routes.js';
 import { registerSharingRoutes } from './modules/sharing/routes.js';
 import { registerNotificationRoutes } from './modules/notifications/routes.js';
@@ -52,6 +55,7 @@ export interface SecondBatchModules {
   androidService: Pick<AndroidDeviceService, 'list' | 'register' | 'revoke' | 'unregisterPush'>;
   ingestService: Pick<IngestService, 'ingest' | 'ingestManual'>;
   aiService: Pick<AiProviderService, 'status' | 'list' | 'save' | 'select' | 'delete' | 'fetchModels' | 'test'>;
+  officialAiService: OfficialAiService;
   recognitionService: Pick<RecognitionService, 'retry' | 'recognizeImages'>;
   recognitionQueueService?: ImageRecognitionQueueService;
   sharingService: Pick<SharingService, 'status' | 'createOrReuse' | 'regenerate' | 'cancel' | 'getPublic' | 'markPublicPicked'>;
@@ -110,6 +114,7 @@ export function buildApp({ config, databaseReadiness, core, modules }: BuildAppO
       registerAndroidDeviceRoutes(app, { service: modules.androidService, resolveSession, cookieName: config.COOKIE_NAME, cookieRegistered: true });
       registerIngestRoutes(app, { service: modules.ingestService, resolveUserId, verifyCsrf: (request) => Promise.resolve(verifyCsrf(request)) });
       registerAiRoutes(app, { service: modules.aiService, resolveUserId, verifyCsrf: (request) => Promise.resolve(verifyCsrf(request)) });
+      registerOfficialAiRoutes(app,{auth:modules.auth,service:modules.officialAiService,adminView:officialAiAdminView});
       registerRecognitionRoutes(app, { service: modules.recognitionService as RecognitionService, ...(modules.recognitionQueueService ? { queue: modules.recognitionQueueService } : {}), resolveUserId, verifyCsrf: (request) => Promise.resolve(verifyCsrf(request)), parseImages });
       registerSharingRoutes(app, { service: modules.sharingService, resolveSession, verifyCsrf });
       registerNotificationRoutes(app, { service: modules.notificationService, resolveSession, verifyCsrf });

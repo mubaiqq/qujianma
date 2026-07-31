@@ -8,10 +8,10 @@ import type { AppConfig } from '../../src/platform/config.js';
 const root = resolve(import.meta.dirname, '../..');
 const expectedHashes: Record<string, string> = {
   'public/assets/css/app.css': '4a7d00d4828a553346dd35bcd6d367fc4f72b156296e915662826535e9a0698c',
-  'public/assets/js/app.js': '77cfd060a42d95cbc76ef3438cdd6e2272a4a960d0da651cc65b40c86b8d7659',
+  'public/assets/js/app.js': '8667501cc84915ddf3847c0b823d91df2ac1eb691d36c7e5cc6acaed5bde3324',
   'public/assets/js/login.js': '190a69d3f98b8ccb8db2f4b848b24dac2583d35a5398e63054fd1b45cdc55d00',
   'public/manifest.webmanifest': '1cb199ce12b4536a4221d692aadc939c9fa0bd36bab217116f5b598d8791ea7a',
-  'public/service-worker.js': 'ece34bcc14edec576467a8b136c818f30bf6a8252a35d9361ca216694cb6bf70',
+  'public/service-worker.js': '887010b5332664469b56e5498dcd0fc1db84cada368e10d1303461bea118c941',
 };
 
 const config: AppConfig = {

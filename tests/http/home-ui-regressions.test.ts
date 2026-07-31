@@ -20,4 +20,15 @@ describe('home UI regression contracts', () => {
     expect(appJs).toMatch(/AI_SETTINGS_SAVE_CLOSE[\s\S]*closeSettingsEditor\(\);setTimeout\(loadAiSettings,700\)/);
     expect(appJs).toMatch(/STATION_SAVE_CLOSE[\s\S]*closeSettingsEditor\(\);setTimeout\(loadStations,700\)/);
   });
+
+  it('shows one-click official model and tutorial cards in both add and edit flows',()=>{
+    expect(appJs).toContain("api('/api/ai/official')");
+    expect(appJs).toContain('data-use-official');
+    expect(appJs).toContain('使用官方模型');
+    expect(appJs).toContain('官方模型异常，请添加自己的模型');
+    expect(appJs).toContain('https://q.mcoud.cn/article/2');
+    expect(appJs).toContain('自己添加模型教程');
+    expect(appJs).toContain('${officialAiCard(official,true)}');
+    expect(appJs).toContain("let official={available:0,selected:0};try{official=(await api('/api/ai/official')).data}catch");
+  });
 });

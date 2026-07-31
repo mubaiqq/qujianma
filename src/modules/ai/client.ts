@@ -1,7 +1,7 @@
 import { extractJsonObject, openAiEndpoint, validateAiBaseUrl, type OpenAiClient } from './domain.js';
 
 export interface HttpResponse { status: number; json(): Promise<unknown> }
-export type HttpTransport = (url: string, init: { method: string; headers: Record<string, string>; body?: string; signal: AbortSignal }) => Promise<HttpResponse>;
+export type HttpTransport = (url: string, init: { method: string; headers: Record<string, string>; body?: string; signal: AbortSignal;redirect:'error' }) => Promise<HttpResponse>;
 
 export class AiClientError extends Error {
   constructor(message: string, readonly status: number | null, readonly retryable: boolean, readonly originalCause?: unknown) { super(message); this.name = 'AiClientError'; }
@@ -14,7 +14,7 @@ export class OpenAiCompatibleClient implements OpenAiClient {
     if (!await validateAiBaseUrl(url, { allowPrivate: this.allowPrivate })) throw new Error('API地址不安全或格式错误');
     const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), timeout);
     try {
-      const response = await this.transport(url, { method, headers: { Authorization: `Bearer ${apiKey}`, Accept: 'application/json', ...(payload === undefined ? {} : { 'Content-Type': 'application/json' }) }, ...(payload === undefined ? {} : { body: JSON.stringify(payload) }), signal: controller.signal });
+      const response = await this.transport(url, { method, headers: { Authorization: `Bearer ${apiKey}`, Accept: 'application/json', ...(payload === undefined ? {} : { 'Content-Type': 'application/json' }) }, ...(payload === undefined ? {} : { body: JSON.stringify(payload) }), signal: controller.signal,redirect:'error' });
       let data: unknown; try { data = await response.json(); } catch (cause) { throw new AiClientError('服务返回的不是有效JSON', response.status, false, cause); }
       if (response.status < 200 || response.status >= 300) throw new AiClientError(errorMessage(data, response.status).slice(0, 240), response.status, response.status === 408 || response.status === 429 || response.status >= 500);
       return data !== null && typeof data === 'object' && !Array.isArray(data) ? data as Record<string, unknown> : {};

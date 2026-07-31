@@ -19,4 +19,5 @@ describe('OpenAI client error metadata', () => {
     expect(transport).toHaveBeenCalledOnce();
     now.mockRestore();
   });
+  it('forbids redirects so a public URL cannot redirect to an internal SSRF target',async()=>{const transport=vi.fn().mockRejectedValue(new TypeError('fetch failed'));const client=new OpenAiCompatibleClient(transport,true);await expect(client.request('GET','https://api.example/v1/models','key')).rejects.toBeTruthy();expect(transport).toHaveBeenCalledWith(expect.any(String),expect.objectContaining({redirect:'error'}));});
 });

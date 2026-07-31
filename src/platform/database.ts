@@ -2,7 +2,7 @@ import { createPool, type Pool, type RowDataPacket } from 'mysql2/promise';
 import type { AppConfig } from './config.js';
 
 export const requiredLegacyTables = [
-  'users', 'login_tokens', 'api_tokens', 'app_devices', 'ai_providers', 'incoming_messages',
+  'users', 'login_tokens', 'api_tokens', 'app_devices', 'ai_providers', 'official_ai_config', 'official_ai_user_selection', 'incoming_messages',
   'stations', 'parcels', 'notification_preferences', 'push_subscriptions', 'share_links', 'share_link_parcels',
 ] as const;
 

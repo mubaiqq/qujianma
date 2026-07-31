@@ -20,6 +20,8 @@ import { IngestService } from './modules/ingest/service.js';
 import { MysqlAiProviderRepository } from './modules/ai/repository.js';
 import { AiProviderService, validateAiBaseUrl } from './modules/ai/domain.js';
 import { OpenAiCompatibleClient } from './modules/ai/client.js';
+import { OfficialAiService } from './modules/ai/official.js';
+import { MysqlOfficialAiRepository } from './modules/ai/official-repository.js';
 import { MysqlRecognitionRepository } from './modules/recognition/repository.js';
 import { RecognitionService, type UploadedImage } from './modules/recognition/service.js';
 import { imageRecognitionPayload, textRecognitionPayload } from './modules/recognition/payload.js';
@@ -59,6 +61,7 @@ const secondBatch: SecondBatchModules = {
   androidService: new AndroidDeviceService(new MysqlAndroidDeviceRepository(repositoryPool), createDeviceTokenCrypto(appKey)),
   ingestService: new IngestService(new MysqlIngestRepository(repositoryPool), { process: (messageId, userId) => recognitionService.process(messageId, userId) as Promise<{ status: 'created' | 'not_pickup' | 'failed' | 'no_config'; codes?: string[] }> }, { hashToken: tokenHash }),
   aiService: new AiProviderService(aiRepository, { encrypt: (value) => encryptLegacySecret(value, appKey), decrypt: (value) => decryptLegacySecret(value, appKey), validateUrl: (url) => validateAiBaseUrl(url, { allowPrivate: config.AI_ALLOW_PRIVATE_URLS ?? false }), client: aiClient }),
+  officialAiService:new OfficialAiService(new MysqlOfficialAiRepository(repositoryPool),{encrypt:(value)=>encryptLegacySecret(value,appKey),decrypt:(value)=>decryptLegacySecret(value,appKey),validateUrl:(url)=>validateAiBaseUrl(url,{allowPrivate:config.AI_ALLOW_PRIVATE_URLS??false}),client:aiClient}),
   recognitionService,
   recognitionQueueService,
   sharingService: new SharingService(new MysqlSharingRepository(repositoryPool), createShareTokenCrypto(appKey), { baseUrl: config.APP_BASE_URL }),

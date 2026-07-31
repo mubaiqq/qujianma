@@ -28,6 +28,7 @@ function modules(): SecondBatchModules {
     androidService: { list: vi.fn().mockResolvedValue([]), register: vi.fn(), revoke: vi.fn(), unregisterPush: vi.fn() },
     ingestService: { ingest: vi.fn(), ingestManual: vi.fn() },
     aiService: { status: vi.fn().mockResolvedValue({ status: 200, body: { code: 0, data: {} } }), list: vi.fn(), save: vi.fn(), select: vi.fn(), delete: vi.fn(), fetchModels: vi.fn(), test: vi.fn() },
+    officialAiService: { adminStatus: vi.fn(), publicStatus: vi.fn().mockResolvedValue({ status: 200, body: { code: 0, data: { available: 0, selected: 0 } } }), selectForUser: vi.fn(), fetchModels: vi.fn(), test: vi.fn(), save: vi.fn() } as never,
     recognitionService: { retry: vi.fn(), recognizeImages: vi.fn().mockResolvedValue({ status: 200, body: { code: 0, message: 'ok' } }) },
     sharingService: { status: vi.fn(), createOrReuse: vi.fn(), regenerate: vi.fn(), cancel: vi.fn(), getPublic: vi.fn(), markPublicPicked: vi.fn() },
     notificationService: { get: vi.fn(), subscribe: vi.fn(), unsubscribe: vi.fn(), savePreferences: vi.fn(), testPush: vi.fn(), broadcast: vi.fn() },
