@@ -59,6 +59,8 @@ export interface AdminRepository {
   createArticle(input: { title: string; summary: string; contentHtml: string; authorId: number; authorName: string }): Promise<number>;
   listArticles(): Promise<PublishedArticle[]>;
   getArticle(id: number): Promise<PublishedArticle | null>;
+  updateArticle(id: number, input: { title: string; summary: string; contentHtml: string }): Promise<boolean>;
+  deleteArticle(id: number): Promise<boolean>;
 }
 
 type Row = Record<string, unknown>;
@@ -125,5 +127,13 @@ export class MysqlAdminRepository implements AdminRepository {
   async getArticle(id:number): Promise<PublishedArticle|null> {
     const [rows]=await this.executor.execute('SELECT id,title,summary,content_html,author_name,created_at FROM published_articles WHERE id=?',[id]);const row=(rows as Row[])[0];
     return row?{id:number(row.id),title:String(row.title),summary:String(row.summary),contentHtml:String(row.content_html),authorName:String(row.author_name),createdAt:value(row,'created_at')}:null;
+  }
+  async updateArticle(id:number,input:{title:string;summary:string;contentHtml:string}):Promise<boolean>{
+    const [result]=await this.executor.execute('UPDATE published_articles SET title=?,summary=?,content_html=? WHERE id=?',[input.title,input.summary,input.contentHtml,id]);
+    return Number((result as {affectedRows?:unknown}).affectedRows??0)>0;
+  }
+  async deleteArticle(id:number):Promise<boolean>{
+    const [result]=await this.executor.execute('DELETE FROM published_articles WHERE id=?',[id]);
+    return Number((result as {affectedRows?:unknown}).affectedRows??0)>0;
   }
 }

@@ -31,7 +31,7 @@ function modules(): SecondBatchModules {
     recognitionService: { retry: vi.fn(), recognizeImages: vi.fn().mockResolvedValue({ status: 200, body: { code: 0, message: 'ok' } }) },
     sharingService: { status: vi.fn(), createOrReuse: vi.fn(), regenerate: vi.fn(), cancel: vi.fn(), getPublic: vi.fn(), markPublicPicked: vi.fn() },
     notificationService: { get: vi.fn(), subscribe: vi.fn(), unsubscribe: vi.fn(), savePreferences: vi.fn(), testPush: vi.fn(), broadcast: vi.fn() },
-    adminRepository: { overview: vi.fn().mockResolvedValue({ totalUsers: 0, pendingParcels: 0, activeAiUsers: 0 }), listUsers: vi.fn().mockResolvedValue([]), getUser: vi.fn(), createArticle: vi.fn(), listArticles: vi.fn().mockResolvedValue([]), getArticle: vi.fn() },
+    adminRepository: { overview: vi.fn().mockResolvedValue({ totalUsers: 0, pendingParcels: 0, activeAiUsers: 0 }), listUsers: vi.fn().mockResolvedValue([]), getUser: vi.fn(), createArticle: vi.fn(), listArticles: vi.fn().mockResolvedValue([]), getArticle: vi.fn(), updateArticle: vi.fn(), deleteArticle: vi.fn() },
     pageViews: { login: 'login', home: '=__PICKUP_BOOTSTRAP__;', guide: 'guide', share: '=__SHARE_TOKEN__;', push:'__PUSH_TITLE____PUSH_CONTENT____PUSH_TARGET__', article:'__ARTICLE_TITLE____ARTICLE_CONTENT____ARTICLE_META__', articles:'__ARTICLE_LIST__' },
   };
 }

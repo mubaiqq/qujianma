@@ -80,6 +80,23 @@ describe('admin views', () => {
     expect(html).toContain('data-copy-value="https://example.com/page"');
     expect(html).toContain('navigator.clipboard.writeText');
     expect(html).toContain("label.textContent='已复制'");
+    expect(html).toContain('href="/admin/articles"');
+  });
+
+  it('renders article management with escaped data, inline editing, and a custom delete dialog', () => {
+    const html = adminViews.articles({ csrf: 'csrf-token', articles: [{ id: 9, title: '<公告>', summary: '摘要<script>', contentHtml: '<p>正文</p>', authorName: '管理员', createdAt: '2026-07-31 12:00:00' }] });
+    expect(html).toContain('文章管理');
+    expect(html).toContain('&lt;公告&gt;');
+    expect(html).toContain('摘要&lt;script&gt;');
+    expect(html).toContain('data-article-id="9"');
+    expect(html).toContain('data-edit-article');
+    expect(html).toContain('data-delete-article');
+    expect(html).toContain('id="deleteDialog"');
+    expect(html).toContain("method:'PUT'");
+    expect(html).toContain("method:'DELETE'");
+    expect(html).toContain("button.textContent='✓ 保存成功'");
+    expect(html).not.toContain('window.confirm');
+    expect(html).not.toContain('alert(');
   });
 
   it('renders a consistent responsive user detail with safe provider values', () => {
@@ -110,11 +127,14 @@ describe('admin routes', () => {
     createArticle: vi.fn().mockResolvedValue(42),
     listArticles: vi.fn().mockResolvedValue([]),
     getArticle: vi.fn(),
+    updateArticle: vi.fn().mockResolvedValue(true),
+    deleteArticle: vi.fn().mockResolvedValue(true),
   };
   const views = {
     dashboard: vi.fn((input: { overview: { totalUsers: number }; users: Array<{ id: number }> }) => `<h1>用户管理</h1><b>${input.overview.totalUsers}</b><i>${input.users.length}</i>`),
     user: vi.fn((input: { user: { username: string } }) => `<h1>用户详情</h1><b>${input.user.username}</b>`),
     push: vi.fn(() => '<h1>消息推送</h1>'),
+    articles: vi.fn((input: { articles: Array<{ title: string }> }) => `<h1>文章管理</h1><b>${input.articles.map((article) => article.title).join(',')}</b>`),
   };
   const broadcaster = { broadcast: vi.fn().mockResolvedValue({ sent: 3, failed: 1 }) };
 
@@ -184,6 +204,49 @@ describe('admin routes', () => {
     expect(response.statusCode).toBe(200);
     expect(repository.createArticle).toHaveBeenCalledWith({ title: '系统公告', summary: '摘要', contentHtml: '<h2>更新</h2><p>正文<strong>重点</strong></p>', authorId: 1, authorName: '管理员' });
     expect(broadcaster.broadcast).toHaveBeenCalledWith({ title: '系统公告', body: '摘要', url: '/article/42' });
+    await app.close();
+  });
+
+  it('lists published articles for the founder admin only', async () => {
+    vi.mocked(repository.listArticles).mockResolvedValueOnce([{ id: 9, title: '系统公告', summary: '摘要', contentHtml: '<p>正文</p>', authorName: '管理员', createdAt: '2026-07-31' }]);
+    const app = Fastify(); registerAdminRoutes(app, { auth: auth(1), repository, views, broadcaster });
+    const response = await app.inject('/admin/articles');
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toContain('文章管理');
+    expect(response.body).toContain('系统公告');
+    expect(views.articles).toHaveBeenCalledWith(expect.objectContaining({ csrf: 'csrf' }));
+    await app.close();
+
+    const regular = Fastify(); registerAdminRoutes(regular, { auth: auth(2), repository, views, broadcaster });
+    expect((await regular.inject('/admin/articles')).statusCode).toBe(403);
+    await regular.close();
+  });
+
+  it('updates a sanitized article through an admin and CSRF protected API', async () => {
+    const app = Fastify(); registerAdminRoutes(app, { auth: auth(1), repository, views, broadcaster });
+    const response = await app.inject({ method: 'PUT', url: '/admin/articles/9', headers: { 'x-csrf-token': 'csrf' }, payload: { title: '更新公告', summary: '新摘要', contentHtml: '<p onclick="bad()">新正文</p><script>bad()</script>' } });
+    expect(response.statusCode).toBe(200);
+    expect(repository.updateArticle).toHaveBeenCalledWith(9, { title: '更新公告', summary: '新摘要', contentHtml: '<p>新正文</p>' });
+    expect(response.json()).toEqual({ code: 0, message: '保存成功' });
+    await app.close();
+  });
+
+  it('deletes an article through an admin and CSRF protected API', async () => {
+    const app = Fastify(); registerAdminRoutes(app, { auth: auth(1), repository, views, broadcaster });
+    const response = await app.inject({ method: 'DELETE', url: '/admin/articles/9', headers: { 'x-csrf-token': 'csrf' } });
+    expect(response.statusCode).toBe(200);
+    expect(repository.deleteArticle).toHaveBeenCalledWith(9);
+    expect(response.json()).toEqual({ code: 0, message: '删除成功' });
+    await app.close();
+  });
+
+  it('rejects missing articles, unsafe ids, invalid content, and missing CSRF', async () => {
+    const app = Fastify(); registerAdminRoutes(app, { auth: auth(1), repository, views, broadcaster });
+    vi.mocked(repository.updateArticle).mockResolvedValueOnce(false);
+    expect((await app.inject({ method: 'PUT', url: '/admin/articles/999', headers: { 'x-csrf-token': 'csrf' }, payload: { title: '标题', summary: '摘要', contentHtml: '<p>正文</p>' } })).statusCode).toBe(404);
+    expect((await app.inject({ method: 'PUT', url: '/admin/articles/bad', headers: { 'x-csrf-token': 'csrf' }, payload: { title: '标题', summary: '摘要', contentHtml: '<p>正文</p>' } })).statusCode).toBe(404);
+    expect((await app.inject({ method: 'PUT', url: '/admin/articles/9', headers: { 'x-csrf-token': 'csrf' }, payload: { title: '', summary: '摘要', contentHtml: '<p>正文</p>' } })).statusCode).toBe(400);
+    expect((await app.inject({ method: 'DELETE', url: '/admin/articles/9' })).statusCode).toBe(403);
     await app.close();
   });
 });
